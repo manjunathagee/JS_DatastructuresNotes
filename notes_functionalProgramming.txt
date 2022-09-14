@@ -1,0 +1,143 @@
+Highorder function - takes a function as parameter or returns a function.
+closures
+Currying and Partial applications
+
+Currying - Changing a function which takes a two parameter to a function which takes one parameter is called Currying.
+
+function greet(greeting, name) { ---From this 
+  return `${greeting} ${name}`;
+}
+
+function greet(greeting) { --> to this is called Currying
+   return (name) => {
+       return `${greeting} ${name}`;
+   }
+}
+
+A Special function which is returned from curred function is called partial applications,
+
+const afternoonGreet = greet('Good afternoon'); --> afternoonGreet is partial applications
+
+const greetRatna = afternoonGreet('Ratna');
+
+Pure functions:
+1. have input parameter
+2. no stateful vlaues - don't use anything other than parameter
+3. return value depends only on parameter
+4. No side effects - changing global data, saving datat to DB, changing browser view all are side efffects
+
+e.g
+const add = (x, y) => x + y;
+
+Impure
+let counter = 0;
+
+function incr() {
+  counter ++;
+}
+
+above example is impure, as it's breaking all 4 rules.
+
+Why use Pure functions
+1. Reusable
+2. Composable - combine different functions
+3. Easy to test
+4. Easy to cache as output doesn't chagne
+
+Tigtly control the state with Pure functions.
+
+
+Function Composition:
+making functions by combining other functions
+
+const sentence = 'Lorem ipsum dolor sit amet consectetur adipisicing elit. Laudantium reprehenderit doloremque saepe quidem cumque repudiandae sint impedit dolorem. Modi reiciendis quibusdam ut in nihil ab ullam amet quasi eos culpa!';
+
+const wordsList = R.split(' ', sentence);
+
+const wordsCount1 = R.length(wordsList);
+
+console.log({wordsCount1});
+
+const wordsCount2 = R.compose(R.length, R.split());
+
+console.log({wordsCount2: wordsCount2(' ', sentence)});
+
+const wordsCount3 = R.compose(R.length, R.split(' ')); // Curry on R.split all functions of ramda are curred and pure functions, no need to use R.curry
+
+console.log({wordsCount3: wordsCount3(sentence)});
+
+const wordsCount4 = R.pipe(R.split(' '), R.length); // R.pipe is similar to R.compose, only difference is functions are invoked from left -> right
+
+console.log({wordsCount4: wordsCount4( sentence)});
+
+
+// Count how many digits there are in the following 
+// sentence, using functional composition
+sentence = 'PechaKucha is a presentation style in which 20 slides are shown for 20 seconds each (6 minutes and 40 seconds in total).';
+
+const numbersInString = R.pipe(
+    R.split(''),
+    R.map(parseInt),
+    R.filter(Number.isInteger),
+    R.length
+);
+
+console.log(numbersInString(sentence));
+
+/** -------------------------------------------------Transforming data to HTML --------------------------------- */
+
+const MEALS = [
+    {description: 'Breakfast', calories: 150},
+    {description: 'Lunch', calories: 200},
+    {description: 'Snacks', calories: 100},
+];
+
+const {tr,td, tbody, th, thead, table} = tags;
+
+function cell(tag, className, value) {
+    return tag({className}, value);
+}
+
+function mealRow(className, meal) {
+    return tr({className}, [
+        cell(td, 'pa2', meal.description),
+        cell(td, 'pa2 tr', meal.calories)
+    ]);
+}
+
+function mealBody(className, meals) {
+    const rows = R.map(R.partial(mealRow,['stripe-dark']), meals);
+    const totalsRow = totalRow('bt b', MEALS)
+    return tbody({className}, [rows, totalsRow]);
+}
+
+const headerRow = tr([
+    cell(th, 'pa2 tl', 'Meal'),
+    cell(th, 'pa2 tr', 'Calories')
+]);
+
+function totalRow(className, meals) {
+    const total = R.pipe(
+        R.map((meal)=> meal.calories),
+        R.reduce((acc, value) => acc + value, 0)
+    )(meals);
+    return tr({className}, [
+        cell(td, 'pa2 tr', 'Total :'),
+        cell(td, 'pa2 tr', total)
+    ]);
+}
+
+const mealHeader = thead(headerRow);
+
+function mealsTable(className, meals) {
+    return table({className}, [
+        mealHeader,
+        mealBody('', meals)
+    ]);
+}
+
+const node = document.getElementById('app');
+
+const view = mealsTable('mw5 center w-100 collapse', MEALS);
+
+node.appendChild(view);

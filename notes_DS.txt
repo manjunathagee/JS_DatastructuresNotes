@@ -1,0 +1,138 @@
+NOTE: Learn array methods
+
+BigO notation determines the relationship b/w the runtime of an algorithm with the input size as it goes to inifinity. How the runtime of an algorithm increases with input size.
+
+BigO is only applicable for large inputs as the input size goes to inifinity.
+
+f(n) = 1 => constant
+f(n) = n => linear
+f(n) = n2 => quadratic
+f(n) = log n => logarthematic
+
+BigO indicates worst case scenario, upper bound of an algorithm.
+Time complexity:
+
+Simplifying BigO
+1. O(2n) => O(n) will ingnore constants because as the input size goes towards inifinity, constants will have no impact
+2. O(500) => O(1) will be a constant
+3. O(n^2 + 5n + 20) => O(n^2)
+4. Each nested loop will increases complexity
+5. Arithematic operations is constant
+6. variable assignment is constant
+7. accessing array element with index or object value with key is constant
+
+O(1) > O(log n) > O(n) > O(n log n) > O(n^2)
+
+Space complexity:
+determines the relationship b/w the space consumed by the algorithm as the size of the goes to inifinity
+Auxilary space is the space consumed by the algorithm itself ignoring the space consumed by it's input
+
+Simplifying Space complexity
+1. Primitives takes constant space
+2. String str(n) takes O(n) space complexity, where n is the no. of chars
+3. Same goes for arrays and objects, with no. of elements in an array and no. of keys inside an object
+
+Log complexity: The log is the no. of times you can divide that no. by 2(log base 2) before you get a value that is less than or equal to one.
+
+Recursion, certatin searching and sorting algorithms will have log time complexity.
+
+BigO of Objects: Objects are good options to solve most to the problems when Order is not important 
+Insertion = O(1)
+Removal =  O(1)
+accessing key = O(1)
+searching = O(n)
+
+Object.keys = O(n)
+Object.values = O(n)
+Object.entries = O(n)
+Object.hasOwnProperty = O(1)
+
+BigO of Arrays: Use arrays when the order is important(better options available for ordered lists like Single linked list or Doubly linked list)
+
+Operations: 
+Insertion = depends (Insertion at last will be O(1), Insertion at the beginning will be O(n)- need to shift remaining items )
+Removal = depends (Same as above)
+searching = O(n)
+accessing = O(1) (access with index is always constant irrespective of from where we are quering)
+
+Array methods: push and pop takes O(1)
+sort takes O(n log n)
+Remaingin else takes O(n) - shift, unshift, slice, splice, map, filter, forEach, reduce, concat etc..
+
+Problem Solving approach:
+1. Understanding the problem
+2. Explore concrete examples
+3. Break it down
+4. Solve/Simplify
+5. Look back and refactor
+
+1. Understanding the problem: Ask these questions for every problem that you solve
+    a. Can i restate the problem in my own words
+    b. What are the inputs that goes into the problem
+    c. What are the outputs
+    d. Can i determine the outputs from the inputs? In other words, do i have enough information to solve the problem
+    e. How should i label the important peices of data that are part of the problem.
+
+2. Exlporing concrete examples:
+    Coming up with examples can help you understand the problem better, it can provide more informations on problem
+
+After step one write down simple examples and progress to more complex examples, with empty inputs and invalid inputs
+    a. Start with simple examples
+    b. Progress to more complex examples
+    c. Explore examples with empty inputs and invalid inputs
+
+3. Break it down
+    Explicitly write out the steps you need to take before you start writting the actual code, this will help you explain
+the approach towards solving the problem and increases interaction. Helps you ask question which are lingering (scared to ask)
+
+4. Solve/Simplify:
+    Either solve the problem if you cannot solve the problem solve the simpler problem(part of overall soln), to not get stuck on bigger issue and will have
+something to show.
+    a. Find the core difficulty in what you're trying to solve
+    b. Ignore the difficulty temporarily 
+    c. Provide simple working soln
+    d. Incorporate the difficult part
+
+5. Look back and refactor:
+    a. Can you check the result? 
+    b. Can you derive results differently?
+    c. Can you understand the soln at a glance?
+    d. Can you imporve the performance of your soln?
+    e. can you think of other ways to refactor?
+    f. How have other people solved this problem?
+
+How do you improve?
+1. Devise a plan for solving problem
+2. Master common problem solving patterns
+    a. Frequency counter
+    b. Multiple pointers
+    c. Sliding window
+    d. Divide and Conquer
+    e. Dynamic programming
+    f. Greedy algorithms
+    g. Backtracking
+    etc...
+
+
+Sorting: 
+Built in sorting: built in sort method uses unicode for each array element, don't use it unless array elements are strings or chars
+built in sort method of JS acceps a comparator function it takes two args a and b
+if the return value is 
+a. -ve number, a should come before b
+b. +ve number, a should come after b
+c. 0 means both are equal as far as lthe sort is concerned.
+
+function numComparator(a, b) {
+    return a - b; // return b-a; will sort in decending order
+}
+
+[3,2,1,4,5].sort(numComparator); // [1,2,3,4,5]
+
+// compare strings based on length
+function compareByLen(str1, str2) {
+    return str1.length - str2.length; // return str2.length - str1.length will sort in decending order
+}
+
+['asa', 'a', 'aa', 'abcsd'].sort(compareByLen);
+
+NOTE: https://github.com/yangfcm/algorithm-js

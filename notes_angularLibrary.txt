@@ -1,0 +1,68 @@
+ng new ccf-library --createApplication=false
+    Above command will create a workspace without any projects in it.
+
+ng generate library ccf
+    Above command will generate a ccf project inside the workspace.
+
+ng generate application ccf-testing
+    Above command will generate an application to test the library created.
+
+angular.json
+    two projects will be added one is library and another one is application to test the library which can be differenciated
+based on projectType
+
+package.json
+    new entry will be added for packaging the library(ng-packagr).
+
+tsconfig.json
+    new entry will be created as destination for build output unter paths. ---- Ref 01.
+
+package.json - which belongs to workspace, not the package.json file inside library or application folder.
+    add a new entry to build our library created
+    "ccfbuild": "ng build ccf"
+
+Try building the library using the below command
+    "npm run ccfbuild"
+    The library will be generated under the dist folder which is ready to use.
+
+Next will try to use the library inside the ccf-testing application
+    1. Import CcfModule from 'ccf' - tsconfig.json helps us resolve the path using paths entries as in Ref 01.
+    2. Add component selector inside app.component.html
+    3. Run the application using "ng serve ccf-testing" command.
+
+There are different ways of using the library file inside our application one such way is to create a tgz file.
+    1. Navigate inside dist folder where the build is available cd ./dist/ccf
+    2. npm pack
+    3. next we can use npm install passing this tgz file
+        npm install ./dist/ccf/ccf-0.0.1.tgz
+    4. this will create a new entry in package.json of workspace using file url and not using paths.
+        "ccf": "file:dist/ccf/ccf-0.0.1.tgz"
+    5. Next remove the paths entry from tsconfig.json file to test the modification.
+    6. build the ccf-testing application using below command.
+        ng build ccf-testing
+    7. Run the ccf-testing using simple http server
+        cd ./dist/ccf-testing
+        http-server
+
+
+Steps:
+npm install
+
+ng build ccf --watch
+
+ng serve ccf-testing
+
+
+checkout 
+http://awsprodgitbucket.cloud.operative.com/projects/COM/repos/aos-ccf/browse
+
+go inside src/main/resources
+
+paste the workspace
+
+don't paste node_modules
+
+add ur local changes which u have done for AOS LICO object under ccf library.
+
+test with above steps - npm install, ng build ccf --watch ng serve ccf-testing
+
