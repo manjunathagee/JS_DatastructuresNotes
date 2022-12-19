@@ -1,0 +1,161 @@
+Webpack
+1. manages depedencies: maintains order of depedencies
+2. it's a module bundler, transforms and packs 
+
+npm init --y
+npm i --save-dev webpack webpack-cli 
+
+package.json > scripts > "start": "webpack"
+create index.js file as an entry point for node under src directory which is looked by default by webpack
+
+create webpack.config.js in the root directory
+package.json > scripts > "start": "webpack --config webpack.config.js" // pass config file name to webpack
+
+npm install --save-dev css-loader style-loader
+
+Webpack only knows how to deal with JS files, webpack uses loaders to deal with other file types like json, css, scss, svg, etc..
+
+css-loader takes style and converts them into javascript
+style-loader takes the output of css-loader which is a css in javascript and injects them into style tag in the header
+
+plugins: gives us additional functionality
+
+npm install --save-dev sass-loader node-sass
+
+webpack.config.js:
+    const path = require("path");
+
+    module.exports = {
+        mode: "development",            // dev mode
+        entry: "./src/index.js",        // entry point of the application
+        output: {
+            filename: "main.[contenthash].js",       // output file name where content will be dumped, see description for cache busting
+            path: path.resolve(__dirname, "PROD") // __dirname reolves to current folder, "PROD" will be created inside __dirname
+                    // final output will be inside __dirname/PROD/index.js
+        },
+        plugins: [
+            // HtmlWebpackPlugin - Creates a new index.html in the dist folder which is based of template.html and injects script tag which has dynamic contenthash
+            new HtmlWebpackPlugin({
+                template: './src/template.html'
+            })
+        ],
+        module: {
+            rules: [
+                {
+                    test: /\.css$/,
+                    use: [
+                        "style-loader", // step 3. Inject styles into DOM
+                        "css-loader",   //step 2. Turns css into common js
+                        "sass-loader"   //step 1. Turns sass into css
+                    ]
+                    // The order of invocation of loaders matters, fist sass-loader, css-loader then style-loader, here the order is reversed while writting
+                }
+            ]
+        }
+    };
+
+Cache Busting: 
+contenthash: hash is created based of content of the file, if the file content does not change hash remains same.
+we use content hash as part of file name to avoid browser cache
+hash algo used - md5 
+
+Adding dev and prod configurations:
+Split the webpack.config.js to three files webpack.dev.js, webpack.prod.js and webpack.common.js
+npm i --save-dev webpack-merge // used to merge webpack configurations
+
+npm i --save-dev webpack-dev-server // used for live reload and running changes on the fly
+
+package.json: update scripts
+"start": "webpack-dev-server --config webpack.dev.js --open",
+"build": "webpack --config webpack.prod.js"
+
+HTML-Loader and file-loader:
+- Added html-loader to automatically require the files we reference in img tags
+- Added file-loader to handle the svg,png,jpg,gif files from our images
+- Configured file-loader to add our images to an imgs directory in dist
+- Also configured it to add a hash to their filenames
+- Lastly, added clean-webpack-plugin to our production config to clean out the dist directory each time we build
+- NOTE: file-loader is not required in webpack v5
+
+webpack.common.js: new rule set for html-loader
+{
+    test: /\.html$/,    // file name ending with html will now be handled with html-loader
+    use: ["html-loader"]
+}
+
+webpack.prod.js: new configuration for output, new folder images will be created with name.hash.extension and will be referenced in the html pages.
+assetModuleFilename: "./images/[name].[hash].[ext]"
+
+Multiple entrypoints: 
+webpack.common.js: undate entry to accept an object
+
+entry: {
+        main: "./src/index.js",
+        vendor: "./src/vendor.js" // contains all vendor files like bootstrap, jquery, popper.js etc which almost never changes
+},
+
+webpack.dev.js: 
+output: {
+        filename: "[name].bundle.js", // output file name now will be dynmic, name will come from entry point which will be either main or vendor
+        path: path.resolve(__dirname, "dist")
+},
+
+webpack.prod.js:
+output: {
+        filename: "[name].[hash].bundle.js", // output file name is now dynamic
+        path: path.resolve(__dirname, "dist"),
+        assetModuleFilename: "./images/[name].[hash].[ext]"
+},
+
+Extract css and minify html/js/css:
+npm install --save-dev mini-css-extract-plugin
+
+webpack.common.js: Remove ruleset which transforms, converts css to common js and style-loader which dumps the styles into head tag.
+
+webpack.prod.js:
+add a new plugin
+new MiniCssExtractPlugin({
+    filename: "[name].[hash].bundle.css" // css file name will be of this format
+}),
+
+add a new ruleset:
+rules: [{
+    test: /\.s?css$/,
+    use: [
+        MiniCssExtractPlugin.loader, // Extract css into files, style-loader will dump all styles in head tag
+        "css-loader",   // step 2. Truns css into common js
+        "sass-loader" // step1. Turns sass into css
+    ]
+}]
+
+webpack.dev.js: Move the rule set which was there in common webpack config
+rules: [
+            {
+                test: /\.s?css$/,
+                use: [
+                    "style-loader", // step 3. Inject styles into DOM, still dumps the style in head tag for dev mode, only in prod mode separate files will be creted
+                    "css-loader",   //step 2. Turns css into common js
+                    "sass-loader"   //step 1. Turns sass into css
+                ]
+            }
+        ]
+
+Optimization: for webpack 5 use npm install css-minimizer-webpack-plugin --save-dev
+webpack.prod.js: Make a new entry
+optimization: {
+        minimizer: [
+            new CssMinimizerPlugin(), // default optimizer is TerserPlugin which minifies and uglifies the JS files, since we are using css minifier TerserPlugin is overridden hence add it back
+            new TerserPlugin(), // user fro JS minification
+            new HtmlWebpackPlugin({ // used to minify the html file
+                template: "./src/template.html", 
+                minify: {
+                  removeAttributeQuotes: true,
+                  collapseWhitespace: true,
+                  removeComments: true
+                }
+              })
+        ]
+    },
+    
+webpack.common.js: Refactor and remvoe HtmlWebpackPlugin and move it to webpack.dev.js config
+

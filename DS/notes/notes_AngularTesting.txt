@@ -1,0 +1,139 @@
+Why we need testing?
+    Because testing application helps us check wheather it is working as expected or not.
+
+The CLI takes care of jasmine and Karma configuration for you, we can always fine-tune the configuration by
+editing karma.config.js at the root directory.
+
+karma.config.js created by CLI is not fulled configured, the CLI builds full configuration in memmory based on
+application sturcture by reading the angular.json.
+
+src/test.ts - contains logic to recursevily load *spec.ts files which contains test suites.
+
+
+Code coverage: Helps us identify how much code is covered and parts of code which are yet to be tested.
+ng test --no-watch --code-coverage
+
+If you want to run code coverage on every ng test, edit angular.json and add code "codeCoverage": true, under test-> options
+
+Code Coverage enforcement: If the team wants to decide min code coverage, they can enforce minimun code coverage 
+by editing karma.config.js and add the following configs under coverageIstanbulReporter
+
+Minimun 80% code coverage.
+
+thresholds: {
+    statements: 80, // min 80% statements
+    lines: 80, // min 80% lines 
+    branches: 80, // min 80% branches
+    functions: 80 // min 80% functions
+}
+
+Testing Services: demo.spec.ts
+
+Advantages of automated testing:
+
+function getDispalyName(userObject) {
+    if (userObject) {
+        return userObject.name;
+    } else {
+        return 'Welcome guest user';
+    }
+}
+
+1. lets say you have a function as defined above, without automated tests, we have to launch the application optionally login and 
+execute the application to cover all conditions manually which is error prone(i.e we might miss certain conditions) and it's time consuming
+and also in long run we can easily refactor and add new functionality into existing application without breaking the existing feature.
+
+2. We can capture the bugs before creating a builds.
+3. In long time it reduces the overall testing time.
+4. If time is a constraint then don't write automated tests for each function, instead write tests which makes sense and which are the core 
+to the feature.
+
+Disadvantage:
+1. takes long time - time constraint
+
+ng test - builds the application first and then karma test runner runs the tests
+
+While writing tests, cover all execution paths
+
+Don't write fragile tests like matching exact string contents and looking for array elements at a specific location, instead use toContain
+
+The top most describe name should indicate the system under test, e.g a component, service or a pipe and so on
+
+While writing tests, always follow AAA
+    1. Arrange - create spies, mocks, stubs and providing fake implementation for a dependncy and finally create the instance
+        of System under test e.g component, service etc..
+    2. Act - call the methods
+    3. Assert - write expectations
+
+beforeEach(() => {
+    // Setup code
+}); 
+
+afterEach(() => {
+    // Teardown code
+});
+
+Each indivisual tests should have a fresh copy of component else execution of one test will impact other making them fragile.
+
+A component-under-test doesn't have to be injected with real services.
+In fact, it is usually better if they are test doubles (stubs, fakes, spies, or mocks).
+The purpose of the spec is to test the component and will assume that all the depedencies are working correctly,
+not the service, and real services can be trouble.
+
+let userServiceStub: Partial<UserService>; // Partial makes all keys of an interface as optional
+
+The second parameter to the Jasmine matcher (e.g., 'expected name') is an optional failure label.
+If the expectation fails, Jasmine appends this label to the expectation failure message
+In a spec with multiple expectations, it can help clarify what went wrong and which expectation failed.
+
+Testing Strings and Arrays:
+    Don't test for exact string match, instead look for includes.
+    similarly for array's look for toContain, no need to test for exact index of items.
+
+Setup and Teardown:
+    Describe should indicate 'System under test'.
+
+    AAA:
+        Arrange (Creating objects, mock, fake, spyOn etc..)
+        Act (Call relavent methods)
+        Assert (Write expectations and outcomes)
+
+        Running tests should not have side effects, i.e running of one test should not effect other tests, Solution is to run each test
+    in it's own isolated environment and start with clean state, in order to acheive this will use beforeEach (set up), afterEach(tear down)
+
+Forms:
+    When writing unit tests with forms, verify the existence of form controls as the template expects them. And also verify for validators.
+
+Event Emitters:
+    Event emitters are observables, hence we can subscribe to them and write expectations.
+
+Services:
+    Use jasmine spyOn to call fake implementation, don't call actual http services.
+
+Integration Testing:
+    Unit testing has some limitations like how component interacts with it's template etc, hence we use Integration testing where we will test
+the Integration of component to it's template.
+
+beforeEach(()=> {
+    let fixture: ComponentFixture<VoterComponent>; -> wrapper class for the component, which contains both component instance as well has reference
+        to it's DOM and other usefull utilities like change detection etc..
+    let component: VoterComponent;
+
+    beforeEach(() => {
+        TestBed.configureTestingModule({
+            providers: [VoterComponent]
+        });
+        fixture = TestBed.createComponent(VoterComponent);
+        component = fixture.componentInstance;
+    });
+});
+
+NOTE: DebugElement has properties like attributes, classes, styles and so on, native element has properties like innerText and innerHTML etc
+
+it('should increase totalvote count when upvote button is clicked', ()=> {
+    let de: DebugElement = fixture.debugElement.query(By.css('.glyphicon-menu-up'));
+
+    de.triggerEventHandler('click', null); -> How to trigger events
+
+    expect(component.myVote).toBe(1);
+});

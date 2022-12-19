@@ -1,0 +1,102 @@
+Micro-frontends help us break large frontend applications into smaller independent applications or modules that can be built and deployed at their repo.
+Doing this using Module Federation allows us to combine the applications at run time in the client’s browsers and eliminate build-time dependencies
+
+Step 1: Create host and micro frontend applications
+Step 2: 
+
+import("Remote/App") will dynamically fetch the Remote app’s App.js React component.
+We need to use a lazy loader and an ErrorBoundary component to create a smooth experience for users in case the fetching takes a long time or introduces errors in our host app
+
+import React from "react";
+import ErrorBoundary from "./ErrorBoundary";
+const RemoteApp = React.lazy(() => import("Remote/App"));
+const RemoteButton = React.lazy(() => import("Remote/Button"));
+
+const RemoteWrapper = ({ children }) => (
+  <div
+    style={{
+      border: "1px solid red",
+      background: "white",
+    }}
+  >
+    <ErrorBoundary>{children}</ErrorBoundary>
+  </div>
+);
+
+export const App = () => (
+  <div style={{ background: "rgba(43, 192, 219, 0.3)" }}>
+    <h1>This is the Host!</h1>
+    <h2>Remote App:</h2>
+    <RemoteWrapper>
+      <RemoteApp />
+    </RemoteWrapper>
+    <h2>Remote Button:</h2>
+    <RemoteWrapper>
+      <RemoteButton />
+    </RemoteWrapper>
+    <br />
+    <a href="http://localhost:4000">Link to Remote App</a>
+  </div>
+);
+export default App;
+
+Next, we need to add Module Federation to tell our host where to get the Remote/App and Remote/Button components.
+In our webpack.config.js we introduce the ModuleFederationPlugin:
+
+// contents of webpack.config.js from host
+const ModuleFederationPlugin = require("webpack/lib/container/ModuleFederationPlugin");
+const { dependencies } = require("./package.json");
+
+module.exports = {
+  //...
+  plugins: [
+    new ModuleFederationPlugin({
+      name: "Host", // name is used to distinguish modules, used while exporting it
+      remotes: {
+        Remote: `Remote@http://localhost:4000/moduleEntry.js`, // In host while importing Remote will be resolved using this path
+      },
+      shared: {
+        ...dependencies, // list of dependencies derived from package.json and which are shared b/w modules to eliminate duplicates 
+        react: {
+          singleton: true, // Maintain single insance of react to avoid duplicates
+          requiredVersion: dependencies["react"],
+        },
+        "react-dom": {
+          singleton: true,
+          requiredVersion: dependencies["react-dom"],
+        },
+      },
+    }),
+    //...
+  ],
+  //...
+};
+
+// contents of webpack.config.js from remote application
+const ModuleFederationPlugin = require("webpack/lib/container/ModuleFederationPlugin");
+const { dependencies } = require("./package.json");
+
+module.exports = {
+  //...
+  plugins: [
+    new ModuleFederationPlugin({
+      name: "Remote", // name is used while importing in host application
+      filename: "moduleEntry.js",
+      exposes: {
+        "./App": "./src/App",       // list of components exposed
+        "./Button": "./src/Button",
+      },
+      shared: {
+        ...dependencies,
+        react: {
+          singleton: true,
+          requiredVersion: dependencies["react"],
+        },
+        "react-dom": {
+          singleton: true,
+          requiredVersion: dependencies["react-dom"],
+        },
+      },
+    }),
+  //...
+};

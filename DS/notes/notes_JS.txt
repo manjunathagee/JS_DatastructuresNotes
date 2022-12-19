@@ -1,0 +1,204 @@
+How JS works and Execution context:
+    * JS is synchronous single threaded language
+    * EC has two main components memmory component which stores the environment variables and code component which is the thread of execution
+
+    * Everthing in JS is executed inside Execution context(EC) and execution of JS takes place in two phases 1. EC creation phase and 2. code execution phase.
+We use Call stack to maintain the order of exection of EC, first and at the bottom of call stack a global EC is created 
+1. In the memmory allocation phase, memmory is allocated to all varible and undefined is assigned to them and memmory is allocated to functions as well.
+2. In the code execution phase actual code is executed, while executing the code if it encounters another function invocation a new EC is created for that function
+and pushed to call stack and it will be executed. Upon completion of the function execution the EC corresponding to that function will be removed off the stack and will be destroyed
+and control will go to invoking EC.
+ Once the global EC is done, it will be removed from call stack and JS will end it's exection.
+
+Hoisting: with hoisting we will be able to access variables and funcitons before initializing it, to under stand this we need to understand how EC is created and executed.
+First phase is memmory allocation phase where, memmory is allocated to all variables with undefined value assigned to it and funcitons
+Second phase is code execution phase, where the actual code is executed.
+
+welcomeUser(); // Welcome manju
+
+console.log(x); // Referrence error: x not defined
+console.log(name); // undefined -> value is not assigned yet, only memmory is allocated with undefined value
+
+var name = 'manju';
+
+function welcomeUser(){
+    console.log('Welcome' + name);
+}
+
+Promises:
+
+const delay = (ms) => {
+    return new Promise((resolve, reject) => {
+        setTimeout(() => {
+            resolve('promise resolved...')
+        }, ms);
+    })
+}
+
+delay.then(()=> console.log('resolved'));
+
+NOTE: 
+We cannot resolve more than once withing executor function, any subsequest resolve or reject will be ignored.
+The executor function is invoked immediatly and resolve or reject can happen in future
+The status of promise can move form status-> pending, result->undefined to status-> fulfilled, result->done(for success) OR
+status->pending, result->undefined to status->rejected, result-> error
+
+Promise.then() -> has two callbacks one for success and one for error, 
+new Promise.then(()=> {/*To handle success*/}, null); // no catch
+new Promise.then(null, (error)=> {/*To handle error*/}) // no then block
+
+new Promise.then().catch();
+
+new Promise()
+    .finally(()=> console.log('Finally trigerred first'))
+    .then(() => console.log('Than resolved'))
+    .catch(error => console.log('Error handle'));
+
+NOTE: the order of execution depends on order of finally block, it acceps no parameters and resolve and reject accpets only one argument any extra arguments will be ignored.
+
+new Promise((resolve, reject) => {setTimeout(()=> resolve('One'), 3000)})
+    .then(result => {
+        console.log('Result 1', result); 
+        return new Promise((resolve, reject) => {
+            setTimeout(()=>{resolve('will wait for this resolve')}, 1000); // In the chain if there is a network request or timeout, subsequent blocks wil wait
+        }); 
+    }
+    )
+    .then(result => {
+        console.log('Result 2:', result); 
+        return 'Three'; //if any block returns a reject the next catch will handle it e.g return new Promise((resolve, reject) => reject(new Error('some error')))
+    }
+    )
+    .then(result => {
+        console.log('Result 3', result);
+            return 'Three'; // any value returned from a then or catch block will be a promise and you can chain it
+        }
+    )
+    .then(result => {
+        console.log('Result 4', result);
+            return 'Four'; // any value returned from a then or catch block will be a promise and you can chain it
+        }
+    )
+    .catch(error => {console.log('Error: ', error); return new Error('Error 2')})
+    .catch(error => {console.log('Error: ', error); return new Error('Error 3')})
+    .finally(()=> { // Finally will always be invoked irrespective of resolve or reject and it does not accept any arguments
+        console.log('Clean up');
+        return new Promise((resolve, reject) => reject('asdfa'));// any rejects or throwing error will be handled by subsequent catch blocks
+    })
+    .catch(error => {
+        console.log('Error: ', error); 
+        return new Promise((resolve, reject) => reject('Latest error...'));
+    })
+    .catch(error => console.log(error));
+
+Async/await: We need to wrap promises within an fucntion with async
+
+
+function queryGoogle(location) {
+    console.log(`Quering to ${location}`);
+    return new Promise((resolve, reject) => {
+        setTimeout(() => {
+            if(location === 'Google') {
+                resolve('Able to query google...');
+            } else {
+                reject('Unable to query google...');
+            }
+        }, (1000));
+    });
+}
+
+function processWebRequest(result) {
+    return new Promise((resolve, reject) => {
+        resolve('Processing results....' + result);
+    });
+}
+
+queryGoogle('Google').then(results => {
+    return processWebRequest(results);
+}).then(result => {
+    console.log(result);
+}).catch(err => {
+    console.log(err);
+});
+
+async function doProcessing() {
+    try {
+        const response = await queryGoogle("Facebook");
+        const result = await processWebRequest(response);
+        console.log(result);
+    } catch(err) {              // For catching error use try catch
+        console.log(err);
+    }
+    
+}
+
+doProcessing();
+
+DOM Manipulation: only 14 techniques are required to learn
+
+1. Adding elements to the page
+    const body = document.body;
+
+    body.append(...); // apend accepts multiple args which are of type either sting or dom elements
+    body.appendChild(...); // appendChild accepts only one arg of type dom, it does not accept string, append is flexiable
+
+    const div = document.createElement('div');
+
+    div.textContent = "hello world";
+    div.innerText = "hello";
+
+    both accpets string which are appended to element, textContent returns all hidded elements with spacing and innerText 
+    only returns text which are visible on page. 
+
+    const body = document.body;
+
+    const div = document.createElement('div');
+
+    // div.innerHTML = "<strong>Hello </strong>"; // with innerText and textContent we can only append string, but using innerHTML we can directy append html content which is not recommended
+
+    // instead do below
+    const span = document.createElement('strong');
+    span.innerText = "Hello";
+    div.append(span);
+
+    body.append(div);
+
+2. Removing elements
+    a. Remove with parent Reference
+    b. Removing with current element reference
+
+    
+    const div = document.querySelector('#container');
+
+    const id1 = document.querySelector('#id1');
+    const id2 = document.querySelector('#id2');
+
+    id2.remove(); // Remove with current element reference
+
+    div.remove(id1); // Remove with parent reference
+
+3. Modifying attributes
+    id1.title = 'hello'; // change directly with property name
+    id1.removeAttribute('title'); // Remove attribute by attribute name
+    id1.setAttribute('title', 'hello world') // set property with method
+    console.log(id1.title);
+
+4. Data attributes, these are custom attributes to store value in elements directly
+    <div id="container" data-first-name="abc"></div>
+
+    const div = document.querySelector('#container');
+
+    div.dataset.newValue = 'hehehe'; // add new dataset, converts camelCase to hiphennated value like data-new-value = "hehehe" in html tag
+
+    console.log(div.dataset.firstName = 'hehehe'); // retreives dataset, converts hiphennated value to camelCase 
+
+5. classes
+    const div = document.querySelector('#container');
+    div.classList.add('new-class'); 
+    div.classList.remove('new-class'); 
+    div.classList.toggle('new-class'); 
+
+6. Style
+    const div = document.querySelector('#container');
+    div.style.color = "Blue";
+    div.style.backgroundColor = "red"; // use camelCase
